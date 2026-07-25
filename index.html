@@ -15,6 +15,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Press+Start+2P&family=Baloo+2:wght@500;700&display=swap" rel="stylesheet">
+<!-- Sin JS la pagina se queda en espanol completo (el HTML base es ES),
+     asi que el selector se oculta para no ofrecer un control muerto. -->
+<noscript><style>.lang { display: none !important; }</style></noscript>
 <style>
   /* ══════════════════════════════════════════════════════════════════
      SPLOOBA — landing
@@ -130,7 +133,6 @@
   .hero .eyebrow { margin-bottom: 1.1em; }
   .lede { font-size: clamp(1.08rem, 2.4vw, 1.35rem); max-width: 46ch; margin: 0 auto; }
   .lede b { color: var(--gold); font-weight: 700; }
-  .lede-en { font-size: .92rem; color: var(--muted); margin: .5em auto 0; max-width: 42ch; }
 
   /* ── Hero ───────────────────────────────────────────────────────── */
   .hero {
@@ -319,6 +321,39 @@
 
   :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
+  /* ── Selector de idioma ─────────────────────────────────────────────
+     Absoluto dentro del hero (NO fixed): se va con el scroll y nunca
+     tapa el gameplay ni desplaza el contenido. Banderas dibujadas a
+     mano en SVG (los emoji de bandera no se renderizan en Windows). */
+  .lang {
+    position: absolute; z-index: 3;
+    top: 12px; right: max(16px, calc((100% - var(--maxw)) / 2 + 20px));
+    display: flex; gap: 8px;
+  }
+  .lang-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 44px;
+    padding: 8px 11px;
+    font-family: "Press Start 2P", monospace;
+    font-size: .5rem; letter-spacing: .1em; line-height: 1;
+    color: var(--muted);
+    background: rgba(30,21,71,.88);
+    border: 3px solid var(--ink-0);
+    border-radius: 7px;
+    box-shadow: var(--hard-2);
+    cursor: pointer;
+    transition: transform .1s steps(2), box-shadow .1s steps(2);
+  }
+  .lang-btn svg { display: block; flex: none; }
+  .lang-btn:hover, .lang-btn:focus-visible { color: var(--gold); transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(0,0,0,.55); }
+  /* Estado activo: se hunde el boton, como una tecla pulsada de arcade */
+  .lang-btn[aria-pressed="true"] {
+    color: #2A1B00; background: var(--gold);
+    border-color: var(--ink-0);
+    transform: translate(3px, 3px); box-shadow: 0 0 0 rgba(0,0,0,.55);
+  }
+  .lang-btn[aria-pressed="true"]:hover { color: #2A1B00; }
+
   /* ── Responsive ─────────────────────────────────────────────────── */
   @media (max-width: 900px) {
     .game-bubbles { grid-template-columns: minmax(0, 1fr); justify-items: center; }
@@ -342,6 +377,10 @@
     .btn, .btn-ghost { width: 100%; justify-content: center; }
     .btn-lines { align-items: center; text-align: center; }
     .fx-bubble { display: none; }   /* menos ruido en pantalla pequena */
+    /* Solo bandera: con el texto ES/EN el selector chocaria con el icono
+       centrado del hero. El nombre accesible lo da el aria-label. */
+    .lang-btn span { display: none; }
+    .lang-btn { padding: 9px 10px; gap: 0; }
   }
 
   @media (max-width: 380px) {
@@ -349,13 +388,19 @@
     .hero .eyebrow { font-size: .5rem; letter-spacing: .14em; }
     .chips li { font-size: .5rem; padding: 8px 9px; }
     .orient { font-size: .46rem; }
+    /* En pantallas muy estrechas el selector queda a 2px del icono del
+       hero: se baja el hero para que no se rocen. */
+    .hero { padding-top: 66px; }
+    .lang { gap: 6px; top: 10px; right: 12px; }
+    .lang-btn { padding: 8px; min-height: 44px; }   /* zona tactil >= 44px */
+    .lang-btn svg { width: 22px; height: 15px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .fx-bubble { display: none; }
     .hero-icon { animation: none; }
-    .btn, .device { transition: none; }
+    .btn, .device, .lang-btn { transition: none; }
     .device:hover { transform: none; }
   }
 </style>
@@ -370,13 +415,42 @@
 <div class="fx-bubble" aria-hidden="true" style="--c:#F5C518; left:88%; width:30px; height:30px; --t:38s; --d:-4s;  --x:-18px;"></div>
 
 <header class="hero">
+
+  <!-- Selector de idioma. Banderas SVG dibujadas a mano con shape-rendering
+       crispEdges (aire pixel-art) — los emoji de bandera no se pintan en Windows. -->
+  <div class="lang" role="group" aria-label="Idioma / Language">
+    <button type="button" class="lang-btn" data-set-lang="es" aria-pressed="true"
+            lang="es" aria-label="Cambiar idioma a español" title="Español">
+      <svg width="26" height="18" viewBox="0 0 26 18" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+        <rect width="26" height="18" fill="#C60B1E"/>
+        <rect y="4.5" width="26" height="9" fill="#FFC400"/>
+        <rect x="6" y="7" width="4" height="5" fill="#C60B1E"/>
+        <rect x="7" y="8" width="2" height="3" fill="#FFC400"/>
+        <rect x="1" y="1" width="24" height="16" fill="none" stroke="#07031A" stroke-width="2"/>
+      </svg>
+      <span>ES</span>
+    </button>
+    <button type="button" class="lang-btn" data-set-lang="en" aria-pressed="false"
+            lang="en" aria-label="Switch language to English" title="English">
+      <svg width="26" height="18" viewBox="0 0 26 18" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+        <rect width="26" height="18" fill="#012169"/>
+        <path d="M0 0 L26 18 M26 0 L0 18" stroke="#FFFFFF" stroke-width="5"/>
+        <path d="M0 0 L26 18 M26 0 L0 18" stroke="#C8102E" stroke-width="2"/>
+        <path d="M13 0 V18 M0 9 H26" stroke="#FFFFFF" stroke-width="7"/>
+        <path d="M13 0 V18 M0 9 H26" stroke="#C8102E" stroke-width="4"/>
+        <rect x="1" y="1" width="24" height="16" fill="none" stroke="#07031A" stroke-width="2"/>
+      </svg>
+      <span>EN</span>
+    </button>
+  </div>
+
   <div class="wrap">
     <img class="hero-icon" src="./img/icon.png" width="512" height="512"
+         data-en-alt="Splooba icon: a golden pixel S inside a violet bubble"
          alt="Icono de Splooba: una S dorada de píxeles dentro de una burbuja violeta">
     <h1>SPLOOBA</h1>
-    <p class="eyebrow">PACK ARCADE // 2 EN 1</p>
-    <p class="lede">Dos arcades pixel art en una sola app. Uno se juega <b>en vertical</b>. El otro te hace <b>girar el móvil</b>.</p>
-    <p class="lede-en">Two pixel-art arcade games in one app. One plays upright, the other sideways.</p>
+    <p class="eyebrow" data-en="ARCADE PACK // 2 IN 1">PACK ARCADE // 2 EN 1</p>
+    <p class="lede" data-en="Two pixel-art arcades in a single app. One is played &lt;b&gt;upright&lt;/b&gt;. The other makes you &lt;b&gt;turn the phone&lt;/b&gt;.">Dos arcades pixel art en una sola app. Uno se juega <b>en vertical</b>. El otro te hace <b>girar el móvil</b>.</p>
 
     <div class="cta-row">
       <a class="btn btn-play" href="https://play.google.com/store/apps/details?id=com.testfriendship.splooba">
@@ -385,28 +459,28 @@
           <path d="M9 7l11 6-11 6z" fill="#FFD23F"/>
         </svg>
         <span class="btn-lines">
-          <strong>JUGAR GRATIS</strong>
+          <strong data-en="PLAY FREE">JUGAR GRATIS</strong>
           <small>Google Play &middot; Android 7+</small>
         </span>
       </a>
-      <a class="btn btn-ghost" href="#juegos">VER LOS JUEGOS</a>
+      <a class="btn btn-ghost" href="#juegos" data-en="SEE THE GAMES">VER LOS JUEGOS</a>
     </div>
 
     <ul class="chips">
-      <li>GRATIS</li>
-      <li>SIN COMPRAS</li>
+      <li data-en="FREE">GRATIS</li>
+      <li data-en="NO PURCHASES">SIN COMPRAS</li>
       <li>ES / EN</li>
       <li>PEGI 3</li>
     </ul>
   </div>
 </header>
 
-<section class="facts-band" aria-label="El pack en cifras">
+<section class="facts-band" aria-label="El pack en cifras" data-en-label="The pack in numbers">
   <div class="wrap facts">
-    <div><b>2</b><span>JUEGOS</span></div>
-    <div><b>50</b><span>NIVELES</span></div>
-    <div><b>4</b><span>MUNDOS</span></div>
-    <div><b>0</b><span>COMPRAS</span></div>
+    <div><b>2</b><span data-en="GAMES">JUEGOS</span></div>
+    <div><b>50</b><span data-en="LEVELS">NIVELES</span></div>
+    <div><b>4</b><span data-en="WORLDS">MUNDOS</span></div>
+    <div><b>0</b><span data-en="PURCHASES">COMPRAS</span></div>
   </div>
 </section>
 
@@ -415,13 +489,13 @@
   <!-- Juego 01 — se presenta en marco VERTICAL porque asi se juega -->
   <section class="game game-bubbles">
     <div class="game-copy">
-      <p class="eyebrow">JUEGO 01</p>
+      <p class="eyebrow" data-en="GAME 01">JUEGO 01</p>
       <h2>BUBBLES</h2>
-      <p>Apuntas, disparas y juntas tres del mismo color. El techo baja en cada tirada, así que el hueco que dejas hoy es el problema de dentro de dos turnos.</p>
-      <p>Treinta niveles hechos a mano, cada uno con su forma y su trampa. Ocho colores, rebotes en las paredes y ninguna partida que se gane sola.</p>
+      <p data-en="You aim, you shoot, you match three of a kind. The ceiling drops with every turn, so the gap you leave now is the trouble you are in two shots from here.">Apuntas, disparas y juntas tres del mismo color. El techo baja en cada tirada, así que el hueco que dejas hoy es el problema de dentro de dos turnos.</p>
+      <p data-en="Thirty hand-made levels, each with its own shape and its own trap. Eight colours, walls to bounce off and not one round that wins itself.">Treinta niveles hechos a mano, cada uno con su forma y su trampa. Ocho colores, rebotes en las paredes y ninguna partida que se gane sola.</p>
       <ul class="tags">
-        <li>30 NIVELES</li>
-        <li>8 COLORES</li>
+        <li data-en="30 LEVELS">30 NIVELES</li>
+        <li data-en="8 COLOURS">8 COLORES</li>
         <li>MATCH-3</li>
       </ul>
     </div>
@@ -430,11 +504,12 @@
       <div class="device device-portrait">
         <div class="screen">
           <img src="./img/bubbles.png" width="1080" height="1919" loading="lazy" decoding="async"
+               data-en-alt="A round of BUBBLES on an upright screen: a grid of coloured bubbles bursts in the middle while the HUD shows level 25 and five lives"
                alt="Partida de BUBBLES en pantalla vertical: una rejilla de burbujas de colores estalla en el centro mientras el marcador muestra nivel 25 y cinco vidas">
         </div>
       </div>
       <figcaption class="orient is-portrait">
-        <i aria-hidden="true"></i> VERTICAL <em>&mdash; a una mano</em>
+        <i aria-hidden="true"></i> <span data-en="UPRIGHT">VERTICAL</span> <em data-en="&amp;mdash; one-handed">&mdash; a una mano</em>
       </figcaption>
     </figure>
   </section>
@@ -445,25 +520,26 @@
       <div class="device device-landscape">
         <div class="screen">
           <img src="./img/pops.png" width="1950" height="1080" loading="lazy" decoding="async"
+               data-en-alt="A round of POPS on a sideways screen: the character fires a harpoon at balls bouncing over a meadow with unicorns and a rainbow"
                alt="Partida de POPS en pantalla horizontal: el personaje lanza un arpón hacia unas bolas que rebotan sobre un prado con unicornios y un arcoíris">
         </div>
       </div>
       <figcaption class="orient is-landscape">
-        <i aria-hidden="true"></i> HORIZONTAL <em>&mdash; gira el móvil</em>
+        <i aria-hidden="true"></i> <span data-en="SIDEWAYS">HORIZONTAL</span> <em data-en="&amp;mdash; turn the phone">&mdash; gira el móvil</em>
       </figcaption>
     </figure>
 
     <div class="game-copy pops-copy">
       <div class="copy-head">
-        <p class="eyebrow">JUEGO 02</p>
+        <p class="eyebrow" data-en="GAME 02">JUEGO 02</p>
         <h2>POPS</h2>
       </div>
       <div class="copy-body">
-      <p>Cada bola que revientas se parte en dos más pequeñas y más rápidas. El arpón sube recto y tarda en volver: dispararlo es comprometerte con el sitio donde estás.</p>
-      <p>Veinte niveles repartidos en cuatro mundos, con plataformas, potenciadores, bolas gigantes y fases de bonus escondidas entre medias.</p>
+      <p data-en="Every ball you burst splits into two smaller, faster ones. The harpoon flies straight up and takes its time coming back: firing it means committing to the spot you are standing on.">Cada bola que revientas se parte en dos más pequeñas y más rápidas. El arpón sube recto y tarda en volver: dispararlo es comprometerte con el sitio donde estás.</p>
+      <p data-en="Twenty levels across four worlds, with platforms, power-ups, giant balls and bonus stages tucked in between.">Veinte niveles repartidos en cuatro mundos, con plataformas, potenciadores, bolas gigantes y fases de bonus escondidas entre medias.</p>
       <ul class="tags">
-        <li>20 NIVELES</li>
-        <li>4 MUNDOS</li>
+        <li data-en="20 LEVELS">20 NIVELES</li>
+        <li data-en="4 WORLDS">4 MUNDOS</li>
         <li>BONUS STAGE</li>
       </ul>
       </div>
@@ -474,8 +550,8 @@
 
 <section class="closer">
   <div class="closer-panel">
-    <h2>Los dos, en una descarga</h2>
-    <p>Sin cuenta, sin compras, sin esperar a que se recargue nada.</p>
+    <h2 data-en="Both games, one download">Los dos, en una descarga</h2>
+    <p data-en="No account, no purchases, nothing to wait for while it refills.">Sin cuenta, sin compras, sin esperar a que se recargue nada.</p>
     <div class="cta-row">
       <a class="btn btn-play" href="https://play.google.com/store/apps/details?id=com.testfriendship.splooba">
         <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" focusable="false">
@@ -483,8 +559,8 @@
           <path d="M9 7l11 6-11 6z" fill="#FFD23F"/>
         </svg>
         <span class="btn-lines">
-          <strong>DESCARGAR</strong>
-          <small>Google Play &middot; gratis</small>
+          <strong data-en="DOWNLOAD">DESCARGAR</strong>
+          <small data-en="Google Play &amp;middot; free">Google Play &middot; gratis</small>
         </span>
       </a>
     </div>
@@ -494,12 +570,80 @@
 <footer>
   <nav>
     <a href="https://play.google.com/store/apps/details?id=com.testfriendship.splooba">Google Play</a>
-    <a href="./privacy.html">Política de Privacidad / Privacy</a>
-    <a href="./data-deletion.html">Eliminación de datos / Data Deletion</a>
-    <a href="mailto:poptopolis.games@gmail.com">Contacto</a>
+    <a href="./privacy.html" data-en="Privacy Policy">Política de Privacidad</a>
+    <a href="./data-deletion.html" data-en="Data Deletion">Eliminación de datos</a>
+    <a href="mailto:poptopolis.games@gmail.com" data-en="Contact">Contacto</a>
   </nav>
   <small>&copy; 2026 Splooba Games</small>
 </footer>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   Selector de idioma ES/EN — sin build, sin dependencias.
+   El HTML base ES es la fuente: si este script no corre, la pagina
+   se ve entera en espanol (nunca vacia, nunca dos idiomas a la vez).
+   Traduce: contenido [data-en], alt [data-en-alt], aria-label
+   [data-en-label], <title>, meta description y <html lang>.
+   ══════════════════════════════════════════════════════════════════ */
+(function () {
+  var KEY = 'splooba-lang';
+  var META = {
+    es: {
+      title: 'Splooba — Pack arcade 2 en 1 para Android',
+      desc: 'Dos juegos arcade en uno: BUBBLES, puzzle de tiro de burbujas, y POPS, acción con arpón. 50 niveles pixel art, gratis y sin compras integradas.'
+    },
+    en: {
+      title: 'Splooba — 2-in-1 arcade pack for Android',
+      desc: 'Two arcade games in one: BUBBLES, a bubble-shooting puzzle, and POPS, harpoon action. 50 pixel-art levels, free and with no in-app purchases.'
+    }
+  };
+
+  var html   = document.documentElement;
+  var descEl = document.querySelector('meta[name="description"]');
+  var btns   = document.querySelectorAll('[data-set-lang]');
+  var i;
+
+  /* El espanol vive en el propio marcado: se cachea antes de tocar nada */
+  var texts = document.querySelectorAll('[data-en]');
+  for (i = 0; i < texts.length; i++) texts[i].setAttribute('data-es', texts[i].innerHTML);
+
+  var alts = document.querySelectorAll('[data-en-alt]');
+  for (i = 0; i < alts.length; i++) alts[i].setAttribute('data-es-alt', alts[i].getAttribute('alt') || '');
+
+  var labels = document.querySelectorAll('[data-en-label]');
+  for (i = 0; i < labels.length; i++) labels[i].setAttribute('data-es-label', labels[i].getAttribute('aria-label') || '');
+
+  function apply(lang) {
+    var k = (lang === 'en') ? 'en' : 'es';
+    var j;
+    for (j = 0; j < texts.length; j++) texts[j].innerHTML = texts[j].getAttribute('data-' + k);
+    for (j = 0; j < alts.length; j++) alts[j].setAttribute('alt', alts[j].getAttribute('data-' + k + '-alt'));
+    for (j = 0; j < labels.length; j++) labels[j].setAttribute('aria-label', labels[j].getAttribute('data-' + k + '-label'));
+    for (j = 0; j < btns.length; j++) {
+      btns[j].setAttribute('aria-pressed', btns[j].getAttribute('data-set-lang') === k ? 'true' : 'false');
+    }
+    html.setAttribute('lang', k);
+    document.title = META[k].title;
+    if (descEl) descEl.setAttribute('content', META[k].desc);
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (saved !== 'es' && saved !== 'en') {
+    var nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    saved = (nav.indexOf('es') === 0) ? 'es' : 'en';
+  }
+  apply(saved);
+
+  for (i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var l = this.getAttribute('data-set-lang');
+      apply(l);
+      try { localStorage.setItem(KEY, l); } catch (e) {}
+    });
+  }
+})();
+</script>
 
 </body>
 </html>
