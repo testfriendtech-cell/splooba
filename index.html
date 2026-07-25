@@ -3,22 +3,503 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Splooba</title>
+<title>Splooba — Pack arcade 2 en 1 para Android</title>
+<meta name="description" content="Dos juegos arcade en uno: BUBBLES, puzzle de tiro de burbujas, y POPS, acción con arpón. 50 niveles pixel art, gratis y sin compras integradas.">
+<meta name="theme-color" content="#120C2E">
+<link rel="icon" href="./img/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Splooba — Pack arcade 2 en 1">
+<meta property="og:description" content="BUBBLES en vertical. POPS en horizontal. 50 niveles de arcade pixel art, gratis en Google Play.">
+<meta property="og:image" content="./img/icon.png">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Press+Start+2P&family=Baloo+2:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  body { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-         display: grid; place-items: center; min-height: 100vh; margin: 0; text-align: center; }
-  h1 { font-size: 2.4rem; margin: 0 0 .3em; }
-  p { color: #888; }
-  a { color: #2a7ae2; }
+  /* ══════════════════════════════════════════════════════════════════
+     SPLOOBA — landing
+     Tokens muestreados del arte real del juego (icono, HUD, cielo POPS).
+     Regla estetica: sombras DURAS (sin blur), bordes gruesos, pixelado
+     intacto. Nada de degradados suaves sobre las capturas.
+     ══════════════════════════════════════════════════════════════════ */
+  :root {
+    --ink:       #120C2E;  /* fondo noche del icono y del selector */
+    --ink-2:     #1E1547;  /* panel indigo */
+    --ink-3:     #2C1F63;  /* borde suave */
+    --ink-0:     #07031A;  /* negro-violeta: bisel de dispositivo */
+    --violet:    #6B4FD8;  /* burbuja del icono */
+    --violet-hi: #A98BFF;
+    --violet-lo: #3B2A86;
+    --gold:      #FFD23F;  /* wordmark SPLOOBA */
+    --gold-mid:  #C98A12;
+    --gold-lo:   #7A4E06;
+    --cream:     #FBEFC0;  /* cielo de POPS */
+    --paper:     #F4F1FF;
+    --muted:     #A99CD8;
+
+    --hard:   6px 6px 0 rgba(0,0,0,.55);
+    --hard-2: 3px 3px 0 rgba(0,0,0,.55);
+    --hard-8: 8px 8px 0 rgba(0,0,0,.6);
+    --maxw: 1120px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: "Baloo 2", system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    overflow-x: hidden;          /* red de seguridad: nada de scroll lateral */
+  }
+
+  ::selection { background: var(--gold); color: #2A1B00; }
+
+  img { max-width: 100%; }
+
+  /* ── Capa de ambiente: estrellas pixeladas del fondo del juego ───── */
+  .fx-stars {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'>\
+<rect x='18' y='40' width='6' height='6' fill='%23ffffff' opacity='.30'/>\
+<rect x='96' y='12' width='4' height='4' fill='%23FFD23F' opacity='.35'/>\
+<rect x='210' y='66' width='6' height='6' fill='%23ffffff' opacity='.18'/>\
+<rect x='284' y='24' width='4' height='4' fill='%236B4FD8' opacity='.55'/>\
+<rect x='52' y='140' width='5' height='5' fill='%23ffffff' opacity='.22'/>\
+<rect x='166' y='176' width='4' height='4' fill='%23FFD23F' opacity='.25'/>\
+<rect x='246' y='210' width='6' height='6' fill='%23ffffff' opacity='.28'/>\
+<rect x='30' y='250' width='4' height='4' fill='%236B4FD8' opacity='.5'/>\
+<rect x='128' y='288' width='5' height='5' fill='%23ffffff' opacity='.2'/>\
+<rect x='300' y='300' width='4' height='4' fill='%23ffffff' opacity='.3'/>\
+<rect x='196' y='118' width='4' height='4' fill='%23ffffff' opacity='.16'/>\
+<rect x='74' y='202' width='4' height='4' fill='%23FFD23F' opacity='.2'/>\
+</svg>");
+  }
+
+  /* Burbujas de ambiente (colores reales de las burbujas del juego) */
+  .fx-bubble {
+    position: fixed; bottom: -160px; z-index: 0; pointer-events: none;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,.92), rgba(255,255,255,.14) 40%, transparent 58%),
+      var(--c);
+    opacity: .26;
+    animation: rise var(--t) linear infinite var(--d);
+  }
+  @keyframes rise { to { transform: translateY(-125vh) translateX(var(--x)); } }
+
+  .wrap { position: relative; z-index: 1; max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+  /* ── Tipografia ─────────────────────────────────────────────────── */
+  .eyebrow {
+    font-family: "Press Start 2P", monospace;
+    font-size: .6rem;
+    letter-spacing: .2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  h1 {
+    font-family: "Titan One", cursive;
+    font-size: clamp(3rem, 12.5vw, 7.4rem);
+    line-height: .9;
+    /* margen inferior generoso: la extrusion ocupa ~14px por debajo
+       de la caja de texto y si no, pisa el eyebrow */
+    margin: .16em 0 .42em;
+    color: var(--gold);
+    letter-spacing: .03em;
+    /* Extrusion arcade: 3 capas planas, cero blur */
+    text-shadow: 0 4px 0 var(--gold-mid), 0 9px 0 var(--gold-lo), 7px 14px 0 rgba(0,0,0,.55);
+  }
+
+  h2 {
+    font-family: "Titan One", cursive;
+    font-weight: 400;
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    line-height: 1;
+    margin: .06em 0 .3em;
+    letter-spacing: .02em;
+    text-shadow: 0 4px 0 rgba(0,0,0,.45);
+  }
+
+  .hero .eyebrow { margin-bottom: 1.1em; }
+  .lede { font-size: clamp(1.08rem, 2.4vw, 1.35rem); max-width: 46ch; margin: 0 auto; }
+  .lede b { color: var(--gold); font-weight: 700; }
+  .lede-en { font-size: .92rem; color: var(--muted); margin: .5em auto 0; max-width: 42ch; }
+
+  /* ── Hero ───────────────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    overflow: hidden;                 /* contiene el halo y las scanlines */
+    padding: clamp(46px, 9vw, 100px) 0 clamp(34px, 6vw, 64px);
+    text-align: center;
+  }
+  /* Halo violeta = la burbuja del icono, ampliada */
+  .hero::before {
+    content: ""; position: absolute; z-index: 0;
+    left: 50%; top: -18%;
+    width: min(1000px, 150%); aspect-ratio: 1;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(107,79,216,.5), rgba(107,79,216,.14) 45%, rgba(107,79,216,0) 66%);
+    pointer-events: none;
+  }
+  /* Scanlines CRT: solo en el hero, para no moirear sobre las capturas */
+  .hero::after {
+    content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+    opacity: .5;
+  }
+
+  .hero-icon {
+    width: clamp(104px, 20vw, 148px); height: auto;
+    image-rendering: pixelated;
+    border-radius: 26%;
+    box-shadow: 0 0 0 4px var(--ink-0), var(--hard-8);
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float { 50% { transform: translateY(-9px); } }
+
+  /* ── Botones ────────────────────────────────────────────────────── */
+  .cta-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin: 30px 0 22px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 15px 24px;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 4px solid var(--ink-0);
+    box-shadow: var(--hard);
+    transition: transform .1s steps(2), box-shadow .1s steps(2);
+  }
+  .btn-lines { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; }
+  .btn-lines strong { font-family: "Press Start 2P", monospace; font-size: .78rem; letter-spacing: .05em; font-weight: 400; }
+  .btn-lines small { font-size: .78rem; line-height: 1; opacity: .8; font-weight: 700; }
+  .btn svg { flex: none; }
+
+  .btn-play { background: var(--gold); color: #2A1B00; }
+  .btn-ghost {
+    background: rgba(30,21,71,.85); color: var(--violet-hi);
+    border-color: var(--violet-lo);
+    font-family: "Press Start 2P", monospace; font-size: .66rem; letter-spacing: .08em;
+    padding: 18px 20px;
+  }
+  .btn-ghost:hover, .btn-ghost:focus-visible { color: var(--gold); border-color: var(--gold); }
+
+  .btn:hover, .btn:focus-visible { transform: translate(3px, 3px); box-shadow: var(--hard-2); }
+  .btn:active { transform: translate(6px, 6px); box-shadow: 0 0 0 rgba(0,0,0,.55); }
+
+  /* ── Chips de ficha ─────────────────────────────────────────────── */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 0; margin: 0; list-style: none; }
+  .chips li {
+    display: flex; align-items: center; gap: 7px;
+    font-family: "Press Start 2P", monospace;
+    font-size: .54rem; letter-spacing: .08em;
+    padding: 9px 12px;
+    border: 2px solid var(--ink-3);
+    border-radius: 6px;
+    color: var(--muted);
+    background: rgba(30,21,71,.8);
+    box-shadow: 2px 2px 0 rgba(0,0,0,.45);
+  }
+  .chips li::before { content: ""; width: 5px; height: 5px; background: var(--gold); flex: none; }
+
+  /* ── Banda de cifras ────────────────────────────────────────────── */
+  .facts-band {
+    position: relative; z-index: 1;
+    background: linear-gradient(180deg, rgba(44,31,99,.92), rgba(18,12,46,.92));
+    border-top: 3px solid var(--ink-3);
+    border-bottom: 3px solid var(--ink-3);
+  }
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); padding-left: 0; padding-right: 0; }
+  .facts div { padding: 24px 8px; text-align: center; border-left: 2px dashed rgba(107,79,216,.4); }
+  .facts div:first-child { border-left: 0; }
+  .facts b {
+    display: block; font-family: "Titan One", cursive;
+    font-size: clamp(1.9rem, 4.6vw, 2.7rem); color: var(--gold); line-height: 1;
+    text-shadow: 0 3px 0 var(--gold-lo);
+  }
+  .facts span { font-family: "Press Start 2P", monospace; font-size: .5rem; letter-spacing: .12em; color: var(--muted); }
+
+  /* ── Los dos juegos ─────────────────────────────────────────────── */
+  .games { display: grid; gap: clamp(56px, 9vw, 104px); padding: clamp(48px, 8vw, 88px) 20px; }
+
+  .game { display: grid; gap: clamp(24px, 4vw, 48px); align-items: center; }
+  .game-bubbles { grid-template-columns: minmax(0, 1fr) minmax(0, 320px); }
+
+  .game-copy p { margin: 0 0 1em; color: #DCD5F5; max-width: 46ch; }
+  .game-bubbles h2 { color: var(--violet-hi); }
+  .game-pops h2 { color: var(--cream); }
+
+  /* POPS ocupa el ancho completo con la captura horizontal, asi que el
+     texto se reparte en dos columnas para no dejar medio bloque vacio */
+  .pops-copy { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 8px clamp(24px, 5vw, 56px); align-items: start; }
+  .pops-copy .copy-body p { max-width: 60ch; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 18px 0 0; list-style: none; }
+  .tags li {
+    font-family: "Press Start 2P", monospace;
+    font-size: .54rem; letter-spacing: .06em;
+    padding: 8px 11px; border-radius: 5px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,.5);
+  }
+  .game-bubbles .tags li { background: var(--violet-lo); color: #E4DAFF; border: 2px solid var(--violet); }
+  .game-pops    .tags li { background: #4A3C10; color: var(--cream); border: 2px solid var(--gold); }
+
+  /* ── Escaparate: maqueta de dispositivo en la orientacion REAL ────
+     Este es el elemento firma de la pagina. BUBBLES se presenta en un
+     marco vertical y POPS en uno horizontal porque asi se juegan de
+     verdad: la estructura de la pagina cuenta algo cierto del producto. */
+  .device {
+    position: relative; margin: 0;
+    background: linear-gradient(155deg, #2A1F63, #0B0622);
+    border: 4px solid var(--ink-0);
+    border-radius: 20px;
+    box-shadow: var(--hard-8);
+    transition: transform .12s steps(3), box-shadow .12s steps(3);
+  }
+  .device-portrait  { padding: 26px 11px 30px; transform: rotate(-1.5deg); }
+  .device-landscape { padding: 12px 30px;      transform: rotate(.7deg); }
+  .device:hover { transform: rotate(0deg) translateY(-4px); box-shadow: 10px 12px 0 rgba(0,0,0,.6); }
+
+  /* Altavoz e indicador: detalle que vende la maqueta sin robar foco */
+  .device::before, .device::after {
+    content: ""; position: absolute; background: rgba(255,255,255,.22); border-radius: 99px;
+  }
+  .device-portrait::before { top: 12px; left: 50%; transform: translateX(-50%); width: 46px; height: 4px; }
+  .device-portrait::after  { bottom: 12px; left: 50%; transform: translateX(-50%); width: 72px; height: 5px; }
+  .device-landscape::before { left: 12px; top: 50%; transform: translateY(-50%); width: 4px; height: 46px; }
+  .device-landscape::after  { right: 12px; top: 50%; transform: translateY(-50%); width: 5px; height: 72px; }
+
+  .screen { position: relative; border-radius: 6px; overflow: hidden; background: var(--ink-2); box-shadow: inset 0 0 0 2px rgba(0,0,0,.55); }
+  .screen img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+  /* Brillo de cristal, plano y diagonal: no difumina el pixel de debajo */
+  .screen::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(112deg, rgba(255,255,255,.16) 0 15%, rgba(255,255,255,0) 30%);
+  }
+
+  figure.shot { margin: 0; }
+  .orient {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-top: 14px;
+    font-family: "Press Start 2P", monospace;
+    font-size: .5rem; letter-spacing: .14em;
+    color: var(--muted);
+  }
+  .orient i { display: block; border: 2px solid currentColor; border-radius: 2px; flex: none; }
+  .orient.is-portrait  i { width: 11px; height: 17px; }
+  .orient.is-landscape i { width: 19px; height: 12px; }
+  .orient em { font-style: normal; font-family: "Baloo 2", sans-serif; font-size: .95rem; letter-spacing: 0; color: #8E80C4; }
+
+  /* ── Cierre: se repite el CTA al final del scroll ───────────────── */
+  .closer { padding: 0 20px clamp(56px, 9vw, 88px); }
+  .closer-panel {
+    max-width: 640px; margin: 0 auto; text-align: center;
+    padding: clamp(28px, 5vw, 44px) 24px;
+    background: linear-gradient(160deg, rgba(59,42,134,.85), rgba(18,12,46,.9));
+    border: 3px solid var(--violet-lo);
+    border-radius: 14px;
+    box-shadow: var(--hard);
+  }
+  .closer-panel h2 { font-size: clamp(1.6rem, 5vw, 2.4rem); color: var(--gold); margin-bottom: .25em; }
+  .closer-panel p { color: #DCD5F5; margin: 0 0 24px; }
+  .closer .cta-row { margin: 0; }
+
+  /* ── Pie ────────────────────────────────────────────────────────── */
+  footer { border-top: 3px solid var(--ink-3); padding: 40px 20px 60px; text-align: center; }
+  footer nav { display: flex; flex-wrap: wrap; gap: 12px 26px; justify-content: center; margin-bottom: 20px; }
+  footer a { color: #B9A8FF; text-decoration: none; border-bottom: 2px solid transparent; padding: 4px 0; }
+  footer a:hover, footer a:focus-visible { color: var(--gold); border-bottom-color: var(--gold); }
+  footer small { display: block; color: #6F63A8; font-size: .82rem; }
+
+  :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+
+  /* ── Responsive ─────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .game-bubbles { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+    .game-bubbles .game-copy { order: 2; }
+    .game-bubbles .shot { order: 1; max-width: 300px; }
+    .game-copy p { max-width: none; }
+    .pops-copy { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 620px) {
+    body { font-size: 16px; }
+    .facts { grid-template-columns: repeat(2, 1fr); }
+    .facts div:nth-child(2n+1) { border-left: 0; }
+    .facts div:nth-child(n+3) { border-top: 2px dashed rgba(107,79,216,.4); }
+    .device-portrait, .device-landscape { transform: none; }
+    /* La captura 16:9 pierde mucho detalle en movil: se lleva a sangre
+       (justo los 20px de padding del .wrap) para recuperar ancho. */
+    .game-pops .shot { margin-inline: -20px; }
+    .game-pops .orient { margin-left: 20px; }
+    .device-landscape { padding: 8px 16px; border-radius: 14px; }
+    .btn, .btn-ghost { width: 100%; justify-content: center; }
+    .btn-lines { align-items: center; text-align: center; }
+    .fx-bubble { display: none; }   /* menos ruido en pantalla pequena */
+  }
+
+  @media (max-width: 380px) {
+    .btn-lines strong { font-size: .68rem; }
+    .hero .eyebrow { font-size: .5rem; letter-spacing: .14em; }
+    .chips li { font-size: .5rem; padding: 8px 9px; }
+    .orient { font-size: .46rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .fx-bubble { display: none; }
+    .hero-icon { animation: none; }
+    .btn, .device { transition: none; }
+    .device:hover { transform: none; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <h1>Splooba</h1>
-  <p>Arcade game · 2 games in one</p>
-  <p><a href="https://play.google.com/store/apps/details?id=com.testfriendship.splooba">Descargar en Google Play / Get it on Google Play</a></p>
-  <p><a href="./privacy.html">Política de Privacidad / Privacy Policy</a><br>
-     <a href="./data-deletion.html">Eliminación de datos / Data Deletion</a></p>
+
+<div class="fx-stars" aria-hidden="true"></div>
+<div class="fx-bubble" aria-hidden="true" style="--c:#C0392B; left:6%;  width:46px; height:46px; --t:26s; --d:0s;   --x:40px;"></div>
+<div class="fx-bubble" aria-hidden="true" style="--c:#3FA9F5; left:24%; width:28px; height:28px; --t:34s; --d:-8s;  --x:-30px;"></div>
+<div class="fx-bubble" aria-hidden="true" style="--c:#6B4FD8; left:61%; width:38px; height:38px; --t:30s; --d:-18s; --x:24px;"></div>
+<div class="fx-bubble" aria-hidden="true" style="--c:#4CAF50; left:76%; width:22px; height:22px; --t:42s; --d:-26s; --x:34px;"></div>
+<div class="fx-bubble" aria-hidden="true" style="--c:#F5C518; left:88%; width:30px; height:30px; --t:38s; --d:-4s;  --x:-18px;"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="hero-icon" src="./img/icon.png" width="512" height="512"
+         alt="Icono de Splooba: una S dorada de píxeles dentro de una burbuja violeta">
+    <h1>SPLOOBA</h1>
+    <p class="eyebrow">PACK ARCADE // 2 EN 1</p>
+    <p class="lede">Dos arcades pixel art en una sola app. Uno se juega <b>en vertical</b>. El otro te hace <b>girar el móvil</b>.</p>
+    <p class="lede-en">Two pixel-art arcade games in one app. One plays upright, the other sideways.</p>
+
+    <div class="cta-row">
+      <a class="btn btn-play" href="https://play.google.com/store/apps/details?id=com.testfriendship.splooba">
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" focusable="false">
+          <rect x="1" y="1" width="24" height="24" rx="5" fill="#2A1B00"/>
+          <path d="M9 7l11 6-11 6z" fill="#FFD23F"/>
+        </svg>
+        <span class="btn-lines">
+          <strong>JUGAR GRATIS</strong>
+          <small>Google Play &middot; Android 7+</small>
+        </span>
+      </a>
+      <a class="btn btn-ghost" href="#juegos">VER LOS JUEGOS</a>
+    </div>
+
+    <ul class="chips">
+      <li>GRATIS</li>
+      <li>SIN COMPRAS</li>
+      <li>ES / EN</li>
+      <li>PEGI 3</li>
+    </ul>
+  </div>
+</header>
+
+<section class="facts-band" aria-label="El pack en cifras">
+  <div class="wrap facts">
+    <div><b>2</b><span>JUEGOS</span></div>
+    <div><b>50</b><span>NIVELES</span></div>
+    <div><b>4</b><span>MUNDOS</span></div>
+    <div><b>0</b><span>COMPRAS</span></div>
+  </div>
+</section>
+
+<main id="juegos" class="games wrap">
+
+  <!-- Juego 01 — se presenta en marco VERTICAL porque asi se juega -->
+  <section class="game game-bubbles">
+    <div class="game-copy">
+      <p class="eyebrow">JUEGO 01</p>
+      <h2>BUBBLES</h2>
+      <p>Apuntas, disparas y juntas tres del mismo color. El techo baja en cada tirada, así que el hueco que dejas hoy es el problema de dentro de dos turnos.</p>
+      <p>Treinta niveles hechos a mano, cada uno con su forma y su trampa. Ocho colores, rebotes en las paredes y ninguna partida que se gane sola.</p>
+      <ul class="tags">
+        <li>30 NIVELES</li>
+        <li>8 COLORES</li>
+        <li>MATCH-3</li>
+      </ul>
+    </div>
+
+    <figure class="shot">
+      <div class="device device-portrait">
+        <div class="screen">
+          <img src="./img/bubbles.png" width="1080" height="1919" loading="lazy" decoding="async"
+               alt="Partida de BUBBLES en pantalla vertical: una rejilla de burbujas de colores estalla en el centro mientras el marcador muestra nivel 25 y cinco vidas">
+        </div>
+      </div>
+      <figcaption class="orient is-portrait">
+        <i aria-hidden="true"></i> VERTICAL <em>&mdash; a una mano</em>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- Juego 02 — marco HORIZONTAL, a lo ancho de la pagina -->
+  <section class="game game-pops">
+    <figure class="shot">
+      <div class="device device-landscape">
+        <div class="screen">
+          <img src="./img/pops.png" width="1950" height="1080" loading="lazy" decoding="async"
+               alt="Partida de POPS en pantalla horizontal: el personaje lanza un arpón hacia unas bolas que rebotan sobre un prado con unicornios y un arcoíris">
+        </div>
+      </div>
+      <figcaption class="orient is-landscape">
+        <i aria-hidden="true"></i> HORIZONTAL <em>&mdash; gira el móvil</em>
+      </figcaption>
+    </figure>
+
+    <div class="game-copy pops-copy">
+      <div class="copy-head">
+        <p class="eyebrow">JUEGO 02</p>
+        <h2>POPS</h2>
+      </div>
+      <div class="copy-body">
+      <p>Cada bola que revientas se parte en dos más pequeñas y más rápidas. El arpón sube recto y tarda en volver: dispararlo es comprometerte con el sitio donde estás.</p>
+      <p>Veinte niveles repartidos en cuatro mundos, con plataformas, potenciadores, bolas gigantes y fases de bonus escondidas entre medias.</p>
+      <ul class="tags">
+        <li>20 NIVELES</li>
+        <li>4 MUNDOS</li>
+        <li>BONUS STAGE</li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
 </main>
+
+<section class="closer">
+  <div class="closer-panel">
+    <h2>Los dos, en una descarga</h2>
+    <p>Sin cuenta, sin compras, sin esperar a que se recargue nada.</p>
+    <div class="cta-row">
+      <a class="btn btn-play" href="https://play.google.com/store/apps/details?id=com.testfriendship.splooba">
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" focusable="false">
+          <rect x="1" y="1" width="24" height="24" rx="5" fill="#2A1B00"/>
+          <path d="M9 7l11 6-11 6z" fill="#FFD23F"/>
+        </svg>
+        <span class="btn-lines">
+          <strong>DESCARGAR</strong>
+          <small>Google Play &middot; gratis</small>
+        </span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <nav>
+    <a href="https://play.google.com/store/apps/details?id=com.testfriendship.splooba">Google Play</a>
+    <a href="./privacy.html">Política de Privacidad / Privacy</a>
+    <a href="./data-deletion.html">Eliminación de datos / Data Deletion</a>
+    <a href="mailto:poptopolis.games@gmail.com">Contacto</a>
+  </nav>
+  <small>&copy; 2026 Splooba Games</small>
+</footer>
+
 </body>
 </html>
